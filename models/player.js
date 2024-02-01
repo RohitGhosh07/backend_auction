@@ -9,9 +9,13 @@ const playerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  state: {
+    type: String,
+    required: true,
+  },
   biddingPrice: {
     type: Number,
-    required: true,
+    // required: true,
   },
 });
 
