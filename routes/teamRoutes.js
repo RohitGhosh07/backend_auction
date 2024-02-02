@@ -80,31 +80,6 @@ router.get('/allteams', async (req, res) => {
     }
 });
 
-// New route to handle the latest bid retrieval
-router.get('/latestBid', async (req, res) => {
-    try {
-        const { _id } = req.query;
 
-        if (!_id) {
-            return res.status(400).json({ error: 'TeamId is required' });
-        }
-
-        // Fetch the latest bid price for the specified team
-        const latestBid = await Bidding.findOne({ team: _id })
-            .sort({ createdAt: -1 })
-            .limit(1);
-
-        if (!latestBid) {
-            return res.status(404).json({ error: 'No bids found for the specified team' });
-        }
-
-        res.status(200).json({
-            biddingPrice: latestBid.biddingPrice,
-        });
-    } catch (error) {
-        console.error('Error retrieving latest bid:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
 
 module.exports = router;

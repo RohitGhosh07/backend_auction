@@ -44,14 +44,45 @@ router.post('/', async (req, res) => {
 });
 
 // Route to retrieve all users
+// router.get('/users', async (req, res) => {
+//   try {
+//     const users = await User.find();
+//     res.status(200).json(users);
+//   } catch (error) {
+//     console.error('Error retrieving users:', error);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 router.get('/users', async (req, res) => {
   try {
-    const users = await User.find();
-    res.status(200).json(users);
+      const { username } = req.query;
+
+      if (username) {
+          // If teamid is provided, retrieve a specific team by _id
+          const usernames = await User.findById(username);
+
+          if (!usernames) {
+              return res.status(404).json({ error: 'User not found' });
+          }
+
+          // Respond with the details of the specific team
+          return res.status(200).json({
+              name: usernames.name,
+              password: usernames.password,
+              
+          });
+      }
+
+      // If teamid is not provided, retrieve all teams
+      const usernames = await User.find();
+
+      // Respond with the list of teams
+      res.status(200).json(usernames);
   } catch (error) {
-    console.error('Error retrieving users:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
+      console.error('Error retrieving teams:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 module.exports = router;

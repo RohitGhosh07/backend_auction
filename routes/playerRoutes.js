@@ -4,6 +4,7 @@ const cors = require('cors');
 const Player = require('../models/player');
 const Bidding = require('../models/Bidding'); // Make sure you have a Bidding model
 const Team = require('../models/Team'); // Make sure you have a Bidding model
+const cache = {}
 
 router.use(cors({
   origin: 'http://localhost:3000',
@@ -61,34 +62,31 @@ router.post('/biddings', async (req, res) => {
   }
 
   try {
-    // Save bidding details to the 'biddings' collection
-    const bidding = new Bidding({ name, team, biddingPrice });
-    
-
-
-
     const { balance } = await Team.findOne({ name: team });
     console.log(balance);
-    if (balance >= biddingPrice) {
+    const bidding = new Bidding({ name, team, biddingPrice });
+    console.log(biddingPrice)
+    console.log(100 >= 5)
+    if (parseInt(balance) >=parseInt(biddingPrice)) {
+      // Save bidding details to the 'biddings' collection
+      
+      await bidding.save();
+
+      // Update the corresponding player's state to 'S'
+      await Player.updateOne({ name: bidding.name }, { state: 'S' });
+
       const newBalance = (balance - biddingPrice);
       console.log(newBalance);
       await Team.updateOne({ name: team }, { balance: newBalance.toString() });
-      // Update the corresponding player's state to 'S'
-      await Player.updateOne({ name: bidding.name }, { state: 'S' });
-      await bidding.save();
       // Respond with the saved bidding details
       res.status(201).json({
         name: bidding.name,
         team: bidding.team,
         biddingPrice: bidding.biddingPrice,
       });
-    } else {
-      // If the bidding price exceeds the balance, respond with an error
+    }else{
       res.status(601).json({ error: 'Bidding price exceeds team balance' });
     }
-
-
-
 
   } catch (error) {
     console.error('Error submitting bidding details:', error);
@@ -108,6 +106,33 @@ router.get('/biddings/allbiddings', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+// New route to handle the latest bid retrieval
+router.get('/latestBid', async (req, res) => {
+    try {
+        const { name } = req.query;
 
+        if (!name) {
+            return res.status(400).json({ error: 'name is required' });
+        }
+
+        // Fetch the latest bid price for the specified team
+        const latestBid = await Bidding.findOne({ name: name })
+            .sort({ createdAt: -1 })
+            .limit(1);
+
+        if (!latestBid) {
+            return res.status(404).json({ error: 'No bids found for the specified team' });
+        }
+
+        res.status(200).json({
+            biddingPrice: latestBid.biddingPrice,
+        });
+    } catch (error) {
+        console.error('Error retrieving latest bid:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
 
 module.exports = router;
+
+
