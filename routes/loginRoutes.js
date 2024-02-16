@@ -1,3 +1,5 @@
+const connectDB = require('../utils/db');
+
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
@@ -16,9 +18,10 @@ router.post('/', async (req, res) => {
     const {  username, password } = req.body;
 
     // Validate input
-    if ( !username || !password) {
+    if (!username || !password ) {
       return res.status(400).json({ error: ' username, and password are required' });
     }
+    
 
     // Check if the user already exists
     const existingUser = await User.findOne({ username });
@@ -30,7 +33,7 @@ router.post('/', async (req, res) => {
     // const hashedPassword = await bcrypt.hash(password, 10);
 
     // Save user details to the database
-    const user = new User({  username, password: hashedPassword });
+    const user = new User({  username, password });
     await user.save();
 
     // Respond with the saved user details
@@ -41,6 +44,39 @@ router.post('/', async (req, res) => {
     console.error('Error submitting user details:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+/// POST route for retrieving data from localStorage
+router.post('/retrieve', (req, res) => {
+  const { leagueID } = req.body;
+
+  if (!leagueID) {
+    return res.status(400).json({ error: 'League ID is required' });
+  }
+
+  console.log('Received leagueID:', leagueID);
+
+  // Pass the leagueID to the connectDB function
+  connectDB(leagueID);
+
+  // Respond with the data or a success message
+  res.status(200).json({
+    message: leagueID,
+    // Include additional data as needed
+  });
+});
+
+// GET route for retrieving leagueID from query parameter
+router.get('/login', async (req, res) => {
+  const leagueID = req.query.leagueID;
+
+  // Do something with leagueID on the server side
+  console.log('Received leagueID:', leagueID);
+
+  // Send a response back to the client with the received leagueID in the message field
+  res.json({
+    message: leagueID,
+    // Include additional data as needed
+  });
 });
 
 // Route to retrieve all users
@@ -55,32 +91,33 @@ router.post('/', async (req, res) => {
 // });
 router.get('/users', async (req, res) => {
   try {
-      const { username } = req.query;
+    const { username } = req.query;
 
-      if (username) {
-          // If teamid is provided, retrieve a specific team by _id
-          const usernames = await User.findById(username);
+    if (username) {
+      // If teamid is provided, retrieve a specific team by _id
+      const usernames = await User.findById(username);
 
-          if (!usernames) {
-              return res.status(404).json({ error: 'User not found' });
-          }
-
-          // Respond with the details of the specific team
-          return res.status(200).json({
-              name: usernames.name,
-              password: usernames.password,
-              
-          });
+      if (!usernames) {
+        return res.status(404).json({ error: 'User not found' });
       }
 
-      // If teamid is not provided, retrieve all teams
-      const usernames = await User.find();
+      // Respond with the details of the specific team
+      return res.status(200).json({
+        name: usernames.name,
+        password: usernames.password,
+      
 
-      // Respond with the list of teams
-      res.status(200).json(usernames);
+      });
+    }
+
+    // If teamid is not provided, retrieve all teams
+    const usernames = await User.find();
+
+    // Respond with the list of teams
+    res.status(200).json(usernames);
   } catch (error) {
-      console.error('Error retrieving teams:', error);
-      res.status(500).json({ error: 'Internal Server Error' });
+    console.error('Error retrieving teams:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

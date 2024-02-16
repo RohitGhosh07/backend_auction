@@ -25,6 +25,7 @@ app.use('/api/auth', loginRoutes); // Use the loginRoutes for authentication
 app.use('/api/teams', teamRoutes); // Use the loginRoutes for authentication
 
 
+
 const User = mongoose.model("User");
 
 

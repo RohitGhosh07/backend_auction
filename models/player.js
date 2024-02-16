@@ -13,8 +13,16 @@ const playerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  biddingPrice: {
+  age: {
     type: Number,
+    // required: true,
+  },
+  skills: {
+    type: String,
+    // required: true,
+  },
+  category: {
+    type: String,
     // required: true,
   },
 });
